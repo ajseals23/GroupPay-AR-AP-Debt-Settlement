@@ -54,7 +54,6 @@ def load_contracts(csv_filepath):
 
 @app.route('/vendors', methods=['GET'])
 def get_vendors():
-    # Use the specific file path as requested
     csv_filepath = "~/Desktop/Construction_Contracts.csv"
     vendors = load_contracts(csv_filepath)
     vendors_data = [{vendor_id: vendor.name} for vendor_id, vendor in vendors.items()]
