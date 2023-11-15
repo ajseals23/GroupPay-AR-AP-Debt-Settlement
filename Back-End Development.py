@@ -31,6 +31,26 @@ class Vendor:
     def add_contract(self, contract):
         self.contracts.append(contract)
 
+# Define and load contracts element
+
+def load_contracts(csv_filepath):
+    # Read the CSV file into a pandas DataFrame
+    df = pd.read_csv(csv_filepath)
+    vendors = {}
+    for _, row in df.iterrows():
+        vendor_id = row['vendor_id']
+        if vendor_id not in vendors:
+            vendors[vendor_id] = Vendor(vendor_id, row['vendor_name'])
+        contract = Contract(
+            row['object_id'], row['contract_number'], row['description'],
+            row['status'], row['contract_type'], row['subtype'], 
+            row['last_modified'], row['original_amount'], 
+            row['revised_amount'], vendor_id
+        )
+        vendors[vendor_id].add_contract(contract)
+    return vendors
+
+# Define get_vendors element
 
 @app.route('/vendors', methods=['GET'])
 def get_vendors():
