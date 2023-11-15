@@ -3,11 +3,6 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-# Read Construction_Contract data
-
-csv_filepath = "~/Desktop/Construction_Contracts.csv"
-df_csv = pd.read_csv(csv_filepath)
-
 # Create class for contract based on data
 
 class Contract:
@@ -35,6 +30,15 @@ class Vendor:
 
     def add_contract(self, contract):
         self.contracts.append(contract)
+
+
+@app.route('/vendors', methods=['GET'])
+def get_vendors():
+    # Use the specific file path as requested
+    csv_filepath = "~/Desktop/Construction_Contracts.csv"
+    vendors = load_contracts(csv_filepath)
+    vendors_data = [{vendor_id: vendor.name} for vendor_id, vendor in vendors.items()]
+    return jsonify(vendors_data)
 
 
 
