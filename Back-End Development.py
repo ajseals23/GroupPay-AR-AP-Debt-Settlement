@@ -20,6 +20,14 @@ class Contract:
         self.revised_amount = revised_amount
         self.vendor_id = vendor_id
 
+# Create class for vendor based on data
+
+class Vendor:
+    def __init__(self, vendor_id, name):
+        self.vendor_id = vendor_id
+        self.name = name
+        self.contracts = []
+
 
 
 
