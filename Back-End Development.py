@@ -31,6 +31,11 @@ class Vendor:
         self.name = name
         self.contracts = []
 
+# Define add contract element
+
+    def add_contract(self, contract):
+        self.contracts.append(contract)
+
 
 
 
