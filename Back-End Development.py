@@ -4,7 +4,7 @@ from web3 import Web3
 
 app = Flask(__name__)
 
-# Create class called Ethereum Client for interacting with Ethereum blockchain
+# Create class for interacting with Ethereum blockchain
 class EthereumClient:
     def __init__(self, infura_url):
         self.web3 = Web3(Web3.HTTPProvider(infura_url))
@@ -15,6 +15,12 @@ class EthereumClient:
     def get_balance(self, address):
         balance = self.web3.eth.get_balance(address)
         return self.web3.fromWei(balance, 'ether')
+
+    # Placeholder for smart contract deployment function
+    def deploy_contract(self, group_name):
+        # Implement smart contract deployment logic here
+        # Return the contract address after deployment
+        return "0xContractAddress"
 
 # Create class for contract based on data
 
@@ -142,6 +148,31 @@ def get_eth_balance():
 
     balance = ethereum_client.get_balance(address)
     return jsonify({'balance': balance})
+
+
+# Add new route for adding group with smart contract creation logic
+@app.route('/add_group_with_contract', methods=['POST'])
+def add_group_with_contract():
+    data = request.json
+    group_id = data['group_id']
+    group_name = data['name']
+
+    if group_id in groups:
+        return jsonify({"message": "Group already exists"}), 400
+
+    # Create a new group
+    new_group = Group(group_id, group_name)
+    groups[group_id] = new_group
+
+    # Deploy a new smart contract for this group
+    contract_address = ethereum_client.deploy_contract(group_name)
+    # Store the contract address in group data structure (not shown in the placeholder)
+    
+    return jsonify({"group_id": group_id, "contract_address": contract_address}), 201
+
+# Initialize Ethereum Client
+ethereum_client = EthereumClient('https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID')
+
 
 
 
