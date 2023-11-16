@@ -46,6 +46,14 @@ class Group:
     def add_invoice(self, invoice):
         self.invoices.append(invoice)
 
+# Create class for Invoice
+
+class Invoice:
+    def __init__(self, invoice_id, amount, due_date):
+        self.invoice_id = invoice_id
+        self.amount = amount
+        self.due_date = due_date
+
 # Define and load contracts element
 
 def load_contracts(csv_filepath):
