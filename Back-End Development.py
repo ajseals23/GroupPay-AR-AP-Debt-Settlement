@@ -72,6 +72,10 @@ def load_contracts(csv_filepath):
         vendors[vendor_id].add_contract(contract)
     return vendors
 
+
+# In-memory storage for groups and invoices
+groups = {}
+
 # Add new route for getting vendors
 
 @app.route('/vendors', methods=['GET'])
@@ -80,9 +84,7 @@ def get_vendors():
     vendors = load_contracts(csv_filepath)
     vendors_data = [{vendor_id: vendor.name} for vendor_id, vendor in vendors.items()]
     return jsonify(vendors_data)
-
-# In-memory storage for groups and invoices
-groups = {}
+    
 
 # Add new route for adding group with logic
 
@@ -97,7 +99,25 @@ def add_group():
     return jsonify({"message": "Group added successfully"}), 201
 
 
+# Add new route for adding invoice with logic
 
+@app.route('/add_invoice', methods=['POST'])
+def add_invoice():
+    data = request.json
+    group_id = data['group_id']
+    if group_id not in groups:
+        return jsonify({"message": "Group not found"}), 404
+    new_invoice = Invoice(data['invoice_id'], data['amount'], data['due_date'])
+    groups[group_id].add_invoice(new_invoice)
+    return jsonify({"message": "Invoice added successfully"}), 201
+
+# Add new route for financial summary with logic
+
+@app.route('/financial_summary', methods=['GET'])
+def financial_summary():
+    total_owed = sum(invoice.amount for group in groups.values() for invoice in group.invoices)
+    remaining_balance = 0  # Placeholder for remaining balance calculation
+    return jsonify({"total_owed": total_owed, "remaining_balance": remaining_balance})
 
 
 
