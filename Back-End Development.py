@@ -31,10 +31,24 @@ class Vendor:
     def add_contract(self, contract):
         self.contracts.append(contract)
 
+# Create class for Group
+
+class Group:
+    def __init__(self, group_id, name):
+        self.group_id = group_id
+        self.name = name
+        self.vendors = []
+        self.invoices = []
+
+    def add_vendor(self, vendor):
+        self.vendors.append(vendor)
+
+    def add_invoice(self, invoice):
+        self.invoices.append(invoice)
+
 # Define and load contracts element
 
 def load_contracts(csv_filepath):
-    # Read the CSV file into a pandas DataFrame
     df = pd.read_csv(csv_filepath)
     vendors = {}
     for _, row in df.iterrows():
