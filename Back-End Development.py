@@ -72,7 +72,7 @@ def load_contracts(csv_filepath):
         vendors[vendor_id].add_contract(contract)
     return vendors
 
-# Define get_vendors element
+# Add new route for getting vendors
 
 @app.route('/vendors', methods=['GET'])
 def get_vendors():
@@ -81,6 +81,20 @@ def get_vendors():
     vendors_data = [{vendor_id: vendor.name} for vendor_id, vendor in vendors.items()]
     return jsonify(vendors_data)
 
+# In-memory storage for groups and invoices
+groups = {}
+
+# Add new route for adding group with logic
+
+@app.route('/add_group', methods=['POST'])
+def add_group():
+    data = request.json
+    group_id = data['group_id']
+    if group_id in groups:
+        return jsonify({"message": "Group already exists"}), 400
+    new_group = Group(group_id, data['name'])
+    groups[group_id] = new_group
+    return jsonify({"message": "Group added successfully"}), 201
 
 
 
