@@ -1,7 +1,20 @@
 import pandas as pd
 from flask import Flask, jsonify
+from web3 import Web3
 
 app = Flask(__name__)
+
+# Create class called Ethereum Client for interacting with Ethereum blockchain
+class EthereumClient:
+    def __init__(self, infura_url):
+        self.web3 = Web3(Web3.HTTPProvider(infura_url))
+
+    def is_connected(self):
+        return self.web3.isConnected()
+
+    def get_balance(self, address):
+        balance = self.web3.eth.get_balance(address)
+        return self.web3.fromWei(balance, 'ether')
 
 # Create class for contract based on data
 
@@ -118,6 +131,17 @@ def financial_summary():
     total_owed = sum(invoice.amount for group in groups.values() for invoice in group.invoices)
     remaining_balance = 0  # Placeholder for remaining balance calculation
     return jsonify({"total_owed": total_owed, "remaining_balance": remaining_balance})
+
+
+# Add new route for getting Ethereum balance
+@app.route('/get_eth_balance', methods=['GET'])
+def get_eth_balance():
+    address = request.args.get('address')
+    if not ethereum_client.web3.isAddress(address):
+        return jsonify({'error': 'Invalid address'}), 400
+
+    balance = ethereum_client.get_balance(address)
+    return jsonify({'balance': balance})
 
 
 
