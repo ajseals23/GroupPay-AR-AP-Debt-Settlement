@@ -3,6 +3,15 @@ import tkinter as tk
 from tkinter import ttk
 import pandas as pd
 
+# Enhanced Styling
+style = ttk.Style()
+style.theme_use('clam')  # Using a theme for better widget styles
+style.configure('TLabel', background='lightgray', font=('Helvetica', 10))
+style.configure('TButton', font=('Helvetica', 10))
+style.configure('TEntry', font=('Helvetica', 10))
+style.configure('TCombobox', font=('Helvetica', 10))
+style.configure('Header.TLabel', font=('Helvetica', 12, 'bold'))
+
 def company_details(company):
     df = pd.read_csv('Construction_Contracts.csv')
 
