@@ -12,8 +12,12 @@ style.configure('TCombobox', font=('Helvetica', 10))
 style.configure('Header.TLabel', font=('Helvetica', 12, 'bold'))
 
 def company_details(company):
-    df = pd.read_csv('Construction_Contracts.csv')
-
+    try:
+        df = pd.read_csv('Construction_Contracts.csv')
+    except FileNotFoundError:
+        result_label.config(text="Error: 'Construction_Contracts.csv' file not found.")
+        return 0, 0
+        
     # Calculate Accounts Payable
     vendor_AP = df[df['contractor_name'] == company]['revised_amount'].sum()
 
@@ -25,17 +29,21 @@ def company_details(company):
 def apply_discount():
     # Retrieve the name of the selected company from the dropdown menu
     selected_company = company_var.get()
-
-     # Check if a company is selected
-    if selected_company:
+        if selected_company:
         vendor_AP, vendor_AR = company_details(selected_company)
+        if vendor_AP == 0 and vendor_AR == 0:
+            return  # Exit if there was an error in reading the file
+
         try:
             discount = float(discount_var.get()) / 100
-            discounted_AR = vendor_AR * (1 - discount)
-            result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR}")    
+            if 0 <= discount <= 1:  # Ensure discount is within 0-100%
+                discounted_AR = vendor_AR * (1 - discount)
+                result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR}")
+            else:
+                result_label.config(text="Please enter a discount percentage between 0 and 100.")
         except ValueError:
             result_label.config(text="Please enter a valid discount percentage.")
-     else:
+    else:
         result_label.config(text="Please select a company.")
 
 def on_company_selected(event):
