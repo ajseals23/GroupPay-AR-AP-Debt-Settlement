@@ -16,14 +16,27 @@ def company_details(company):
     result_label.config(text=f"Selected Company: {company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
 
 def apply_discount():
+    # Retrieve the name of the selected company from the dropdown menu
     selected_company = company_var.get()
+
+     # Check if a company is selected
     if selected_company:
+    
+        # Call the company_details function to get accounts payable and receivable for the selected company
         vendor_AP, vendor_AR = company_details(selected_company)
+        
         try:
+            # Attempt to convert the entered discount value to a float and divide by 100 to get a percentage
             discount = float(discount_var.get()) / 100
+
+             # Calculate the discounted accounts receivable amount
             discounted_AR = vendor_AR * (1 - discount)
+
+            # Update the result label to display the selected company, its accounts payable, receivable, and the discounted AR
             result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR}")
+            
         except ValueError:
+            # If the entered discount is not a valid number, update the result label to prompt for a valid discount percentage
             result_label.config(text="Please enter a valid discount percentage.")
 
 def on_company_selected(event):
