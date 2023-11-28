@@ -1,106 +1,113 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 import pandas as pd
 
-# Styling and Design
-style = ttk.Style()
-style.theme_use('clam')  # Using a theme for better widget styles
-style.configure('TLabel', background='lightgray', font=('Helvetica', 10))
-style.configure('TButton', font=('Helvetica', 10))
-style.configure('TEntry', font=('Helvetica', 10))
-style.configure('TCombobox', font=('Helvetica', 10))
-style.configure('Header.TLabel', font=('Helvetica', 12, 'bold'))
+class GroupPayApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("GroupPay")
+        self.geometry("800x600")  # Set the window dimensions
+        self.configure(bg="#F5F5F5")  # Change the background color
+        self.df_companies = pd.read_csv('company_ref.csv')
+        self.df_contracts = pd.read_csv('Construction_Contracts.csv')
+        self.create_widgets()
 
-def read_csv_file(file_path, error_message):
-    try:
-        df = pd.read_csv(file_path)
-        return df
-    except FileNotFoundError:
-        result_label.config(text=error_message)
-        return None
+    def create_widgets(self):
+        self.configure_styles()
+        self.create_title_frame()
+        self.create_content_frame()
 
-def company_details(company):
-    df = read_csv_file('Construction_Contracts.csv', "Error: 'Construction_Contracts.csv' file not found.")
-    if df is None:
-        return 0, 0
+    def configure_styles(self):
+        style = ttk.Style()
+        style.theme_use("clam")  # Use the 'clam' theme for a modern appearance
         
-    # Calculate Accounts Payable
-    vendor_AP = df[df['contractor_name'] == company]['revised_amount'].sum()
+        # Configure the style for labels
+        style.configure("TLabel", font=("Arial", 18), foreground="#333333", background="#F5F5F5")
+        
+        # Configure the style for buttons
+        style.configure("TButton", font=("Arial", 16), padding=10, foreground="white", background="#007acc")
+        style.map("TButton", background=[("active", "#005a8e")])
 
-    # Calculate Accounts Receivable
-    vendor_AR = df[df['vendor_name'] == company]['revised_amount'].sum()
+        # Configure the style for combobox
+        style.configure("TCombobox", font=("Arial", 18))
+        
+        # Configure the style for frames
+        style.configure("TFrame", background="#F5F5F5")
 
-    return vendor_AP, vendor_AR  # Return the calculated values
+    def create_title_frame(self):
+        title_frame = ttk.Frame(self)
+        title_frame.pack(pady=20)
+        
+        # Banner Image
+        self.load_banner_image('group_pay_banner.png', title_frame)
 
-def apply_discount():
-    # Retrieve the name of the selected company from the dropdown menu
-    selected_company = company_var.get()
-    if selected_company:
-        vendor_AP, vendor_AR = company_details(selected_company)
-        if vendor_AP == 0 and vendor_AR == 0:
-            return
-            
+        # Title Label
+        title_label = ttk.Label(title_frame, text="GroupPay", font=("Helvetica", 36, "bold"), background="#007acc", foreground="white")
+        title_label.pack(pady=20)
+
+    def create_content_frame(self):
+        content_frame = ttk.Frame(self)
+        content_frame.pack(padx=20, pady=20)
+
+        # Company Label and Combobox
+        company_label = ttk.Label(content_frame, text="Select a Company:")
+        company_label.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
+        self.company_var = tk.StringVar()
+        company_combobox = ttk.Combobox(content_frame, textvariable=self.company_var, values=self.df_companies['company_name'].tolist(), state="readonly", style="TCombobox")
+        company_combobox.grid(row=0, column=1, padx=10, pady=10, sticky=tk.W)
+        company_combobox.bind("<<ComboboxSelected>>", self.on_company_selected)
+
+        # Discount Label and Entry
+        discount_label = ttk.Label(content_frame, text="Enter Discount Percentage:")
+        discount_label.grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
+        self.discount_var = tk.StringVar()
+        discount_entry = ttk.Entry(content_frame, textvariable=self.discount_var, font=("Arial", 18))
+        discount_entry.grid(row=1, column=1, padx=10, pady=10, sticky=tk.W)
+        discount_entry.bind("<KeyRelease>", self.apply_discount)
+
+        # Result Label
+        self.result_label = ttk.Label(content_frame, text="", font=("Arial", 18), background="#F5F5F5")
+        self.result_label.grid(row=2, column=0, columnspan=2, padx=10, pady=20, sticky=tk.W)
+
+    def load_banner_image(self, image_path, container):
         try:
-            discount = float(discount_var.get()) / 100
-            if 0 <= discount <= 1:  # Ensure discount is within 0-100%
+            image = Image.open(image_path)
+            image = image.resize((800, 200), Image.ANTIALIAS)
+            self.banner_image = ImageTk.PhotoImage(image)
+            banner_canvas = tk.Canvas(container, width=800, height=200)
+            banner_canvas.create_image(0, 0, anchor=tk.NW, image=self.banner_image)
+            banner_canvas.pack()
+        except Exception as e:
+            print(f"Error loading image: {str(e)}")
+
+    def on_company_selected(self, event):
+        selected_company = self.company_var.get()
+        self.company_details(selected_company)
+
+    def company_details(self, company, return_values=False):
+        # Business Logic
+        vendor_AP = self.df_contracts[self.df_contracts['contractor_name'] == company]['revised_amount'].sum()
+        vendor_AR = self.df_contracts[self.df_contracts['vendor_name'] == company]['revised_amount'].sum()
+
+        if return_values:
+            return vendor_AP, vendor_AR
+        else:
+            self.result_label.config(text=f"Selected Company: {company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
+
+    def apply_discount(self, event):
+        selected_company = self.company_var.get()
+        discount = self.discount_var.get()
+        if selected_company:
+            vendor_AP, vendor_AR = self.company_details(selected_company, return_values=True)
+            try:
+                discount = float(discount) / 100
                 discounted_AR = vendor_AR * (1 - discount)
-                result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR}")
-            else:
-                result_label.config(text="Please enter a discount percentage between 0 and 100.")
-        except ValueError:
-            result_label.config(text="Please enter a valid discount percentage.")
-    else:
-        result_label.config(text="Please select a company.")
+                self.result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR:.2f}")
+            except ValueError:
+                self.result_label.config(text="Please enter a valid discount percentage.")
 
-def on_company_selected(event):
-    selected_company = company_var.get()
-    if selected_company:
-        discount_entry.config(state='normal')
-        vendor_AP, vendor_AR = company_details(selected_company)
-        if vendor_AP == 0 and vendor_AR == 0:
-            return
-        result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
-    else:
-        discount_entry.config(state='disabled')
-        
-
-# Load company data
-df = read_csv_file('company_ref.csv', "Error: 'company_ref.csv' file not found.")
-if df is not None:
-    companies_list = df['company_name'].tolist()
-else:
-    companies_list = []
-
-# main window
-root = tk.Tk()
-root.title("Company Selector")
-root.configure(background='lightgray')
-
-# Header label
-header_label = ttk.Label(root, text="Company Financial Details", style='Header.TLabel')
-header_label.pack(padx=10, pady=(10, 5))
-
-# Selecting company
-company_var = tk.StringVar()
-company_combobox = ttk.Combobox(root, textvariable=company_var, values=companies_list, state="readonly")
-company_combobox.pack(padx=10, pady=5)
-company_combobox.bind("<<ComboboxSelected>>", on_company_selected)
-
-# Discount entry
-discount_label = ttk.Label(root, text="Enter Discount Percentage:")
-discount_label.pack(padx=10, pady= (5, 2))
-discount_var = tk.StringVar()
-discount_entry = ttk.Entry(root, textvariable=discount_var)
-discount_entry.pack(padx=10, pady=2)
-discount_entry.bind("<KeyRelease>", lambda _: apply_discount())
-
-# display results
-result_label = ttk.Label(root, text="", anchor='center')
-result_label.pack(padx=10, pady=10, fill='x', expand=True)
-
-# Bind the event handler to the combobox selection event
-company_combobox.bind("<<ComboboxSelected>>", on_company_selected)
-
-# main loop
-root.mainloop()
+if __name__ == "__main__":
+    app = GroupPayApp()
+    app.mainloop()
 
