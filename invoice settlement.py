@@ -1,5 +1,5 @@
 import pandas as pd
-from GUI import on_company_selected
+from UI import on_company_selected
 
 # Load data
 df = pd.read_csv('Construction_Contracts.csv')
