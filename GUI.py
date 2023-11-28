@@ -46,3 +46,8 @@ company_combobox.bind("<<ComboboxSelected>>", on_company_selected)
 
 # main loop
 root.mainloop()
+
+
+
+# TO DO 
+# add discount percentage for AR to get quicker cash 
