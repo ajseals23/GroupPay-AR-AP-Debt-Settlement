@@ -2,80 +2,94 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import pandas as pd
+import logging
 
 class GroupPayApp(tk.Tk):
     def __init__(self):
         super().__init__()
+        # Setting up the main window
         self.title("GroupPay")
-        self.geometry("800x600")  # Set the window dimensions
-        self.configure(bg="#f4f4f4")  # Change the background color
-        self.df_companies = pd.read_csv('company_ref.csv')
-        self.df_contracts = pd.read_csv('Construction_Contracts.csv')
+        self.geometry("800x600")
+        self.configure(bg="#f4f4f4")
+
+        # Initialize data and UI components
+        self.init_data()
+        self.configure_styles()
         self.create_widgets()
 
-    def create_widgets(self):
-        self.configure_styles()
-        self.create_title_frame()
-        self.create_content_frame()
-        self.create_contact_footer()  # Call the function to create the "Contact Us" footer
+    def init_data(self):
+        # Load data from CSV files
+        try:
+            self.df_companies = pd.read_csv('company_ref.csv')
+            self.df_contracts = pd.read_csv('Construction_Contracts.csv')
+        except Exception as e:
+            # Log errors if loading fails
+            logging.error(f"Error loading data: {str(e)}")
+            self.df_companies = pd.DataFrame()
+            self.df_contracts = pd.DataFrame()
 
     def configure_styles(self):
-        style = ttk.Style()
-        style.theme_use("clam")  # Use the 'clam' theme for a modern appearance
-
-        # Configure the style for labels
+        # Configure the appearance of ttk widgets
+        style = ttk.Style(self)
+        style.theme_use("clam")
         style.configure("TLabel", font=("Arial", 18), foreground="#333333", background="#f4f4f4")
-
-        # Configure the style for buttons
         style.configure("TButton", font=("Arial", 16), padding=10, foreground="white", background="#28a745")
         style.map("TButton", background=[("active", "#218838")])
-
-        # Configure the style for combobox
         style.configure("TCombobox", font=("Arial", 18))
-
-        # Configure the style for frames
         style.configure("TFrame", background="#f4f4f4")
 
+    def create_widgets(self):
+        # Create main frames and widgets of the application
+        self.create_title_frame()
+        self.create_content_frame()
+        self.create_contact_footer()
+
     def create_title_frame(self):
+        # Create the title frame with a banner and title label
         title_frame = ttk.Frame(self)
         title_frame.pack(pady=20)
-
-        # Banner Image
         self.load_banner_image('group_pay_banner.png', title_frame)
-
-        # Title Label
         title_label = ttk.Label(title_frame, text="GroupPay", font=("Arial", 36, "bold"), foreground="#007bff", background="#f4f4f4")
         title_label.pack(pady=10)
 
     def create_content_frame(self):
+        # Create the main content frame
         content_frame = ttk.Frame(self)
         content_frame.pack(padx=20, pady=20)
+        self.create_company_selection(content_frame)
+        self.create_discount_entry(content_frame)
+        self.create_calculate_button(content_frame)
+        self.create_result_label(content_frame)
 
-        # Company Label and Combobox
-        company_label = ttk.Label(content_frame, text="Select a Company:")
+    def create_company_selection(self, frame):
+        # Create widgets for company selection
+        company_label = ttk.Label(frame, text="Select a Company:")
         company_label.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
         self.company_var = tk.StringVar()
-        company_combobox = ttk.Combobox(content_frame, textvariable=self.company_var, values=self.df_companies['company_name'].tolist(), state="readonly", style="TCombobox")
+        company_combobox = ttk.Combobox(frame, textvariable=self.company_var, values=self.df_companies['company_name'].tolist(), state="readonly")
         company_combobox.grid(row=0, column=1, padx=10, pady=10, sticky=tk.W)
         company_combobox.bind("<<ComboboxSelected>>", self.on_company_selected)
 
-        # Discount Label and Entry
-        discount_label = ttk.Label(content_frame, text="Enter Discount Percentage:")
+    def create_discount_entry(self, frame):
+        # Create widgets for entering discount percentage
+        discount_label = ttk.Label(frame, text="Enter Discount Percentage:")
         discount_label.grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
         self.discount_var = tk.StringVar()
-        discount_entry = ttk.Entry(content_frame, textvariable=self.discount_var, font=("Arial", 18))
+        discount_entry = ttk.Entry(frame, textvariable=self.discount_var, font=("Arial", 18))
         discount_entry.grid(row=1, column=1, padx=10, pady=10, sticky=tk.W)
-        discount_entry.bind("<KeyRelease>", self.apply_discount)
 
-        # Calculate Button
-        calculate_button = ttk.Button(content_frame, text="Calculate", style="TButton", command=self.calculate_discount)
+    def create_calculate_button(self, frame):
+        # Create a button to calculate discount
+        calculate_button = ttk.Button(frame, text="Calculate", command=self.calculate_discount)
         calculate_button.grid(row=2, column=0, columnspan=2, padx=10, pady=20)
 
-        # Result Label
-        self.result_label = ttk.Label(content_frame, text="", font=("Arial", 18), background="#f4f4f4")
+    def create_result_label(self, frame):
+        # Create a label to display the results
+        self.result_label = ttk.Label(frame, text="", font=("Arial", 18), background="#f4f4f4")
         self.result_label.grid(row=3, column=0, columnspan=2, padx=10, pady=20, sticky=tk.W)
 
     def load_banner_image(self, image_path, container):
+        # Load and display the banner image
         try:
             image = Image.open(image_path)
             image = image.resize((800, 200), Image.ANTIALIAS)
@@ -84,60 +98,53 @@ class GroupPayApp(tk.Tk):
             banner_canvas.create_image(0, 0, anchor=tk.NW, image=self.banner_image)
             banner_canvas.pack()
         except Exception as e:
-            print(f"Error loading image: {str(e)}")
+            logging.error(f"Error loading image: {str(e)}")
 
     def on_company_selected(self, event):
+        # Handle company selection event
         selected_company = self.company_var.get()
-        self.company_details(selected_company)
+        self.update_company_details(selected_company)
 
-    def company_details(self, company, return_values=False):
-        # Business Logic
+    def update_company_details(self, company):
+        # Update and display company details
+        try:
+            vendor_AP, vendor_AR = self.calculate_company_details(company)
+            self.result_label.config(text=f"Selected Company: {company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
+        except Exception as e:
+            self.result_label.config(text=f"Error: {str(e)}")
+
+    def calculate_company_details(self, company):
+        # Calculate details for the selected company
         vendor_AP = self.df_contracts[self.df_contracts['contractor_name'] == company]['revised_amount'].sum()
         vendor_AR = self.df_contracts[self.df_contracts['vendor_name'] == company]['revised_amount'].sum()
-
-        if return_values:
-            return vendor_AP, vendor_AR
-        else:
-            self.result_label.config(text=f"Selected Company: {company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
-
-    def apply_discount(self, event):
-        selected_company = self.company_var.get()
-        discount = self.discount_var.get()
-        if selected_company:
-            vendor_AP, vendor_AR = self.company_details(selected_company, return_values=True)
-            try:
-                discount = float(discount) / 100
-                discounted_AR = vendor_AR * (1 - discount)
-                self.result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR:.2f}")
-            except ValueError:
-                self.result_label.config(text="Please enter a valid discount percentage.")
+        return vendor_AP, vendor_AR
 
     def calculate_discount(self):
-        # This function is triggered when the "Calculate" button is pressed
+        # Calculate and display discount based on user input
         selected_company = self.company_var.get()
         discount = self.discount_var.get()
-        if selected_company:
-            vendor_AP, vendor_AR = self.company_details(selected_company, return_values=True)
-            try:
-                discount = float(discount) / 100
-                discounted_AR = vendor_AR * (1 - discount)
-                self.result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR:.2f}")
-            except ValueError:
-                self.result_label.config(text="Please enter a valid discount percentage.")
+        try:
+            vendor_AP, vendor_AR = self.calculate_company_details(selected_company)
+            discount = float(discount) / 100
+            discounted_AR = vendor_AR * (1 - discount)
+            self.result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR:.2f}")
+        except ValueError:
+            self.result_label.config(text="Please enter a valid discount percentage.")
+        except Exception as e:
+            self.result_label.config(text=f"Error: {str(e)}")
 
     def create_contact_footer(self):
+        # Create a footer for contact information
         contact_frame = ttk.Frame(self)
         contact_frame.pack(side="bottom")
-
-        # Contact Label
         contact_label = ttk.Label(contact_frame, text="Contact Us:", font=("Arial", 16, "bold"), foreground="#333333", background="#f4f4f4")
         contact_label.pack(side="left", padx=10, pady=5)
-
-        # Contact Information Label
-        contact_info_label = ttk.Label(contact_frame, text="Email: GroupPay@gmail.com | Phone: (407) 902-5738", font=("Arial", 12), foreground="#333333", background="#f4f4f4")
+        contact_info_label = ttk.Label(contact_frame, text="Email: GroupPay@gmail.com | Phone: (407) 902-5737", font=("Arial", 12), foreground="#333333", background="#f4f4f4")
         contact_info_label.pack(side="left", padx=10)
 
 if __name__ == "__main__":
+    # Configure logging and run the application
+    logging.basicConfig(level=logging.ERROR)
     app = GroupPayApp()
     app.mainloop()
 
