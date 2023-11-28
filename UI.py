@@ -8,7 +8,7 @@ class GroupPayApp(tk.Tk):
         super().__init__()
         self.title("GroupPay")
         self.geometry("800x600")  # Set the window dimensions
-        self.configure(bg="#F5F5F5")  # Change the background color
+        self.configure(bg="#f4f4f4")  # Change the background color
         self.df_companies = pd.read_csv('company_ref.csv')
         self.df_contracts = pd.read_csv('Construction_Contracts.csv')
         self.create_widgets()
@@ -17,34 +17,35 @@ class GroupPayApp(tk.Tk):
         self.configure_styles()
         self.create_title_frame()
         self.create_content_frame()
+        self.create_contact_footer()  # Call the function to create the "Contact Us" footer
 
     def configure_styles(self):
         style = ttk.Style()
         style.theme_use("clam")  # Use the 'clam' theme for a modern appearance
-        
+
         # Configure the style for labels
-        style.configure("TLabel", font=("Arial", 18), foreground="#333333", background="#F5F5F5")
-        
+        style.configure("TLabel", font=("Arial", 18), foreground="#333333", background="#f4f4f4")
+
         # Configure the style for buttons
-        style.configure("TButton", font=("Arial", 16), padding=10, foreground="white", background="#007acc")
-        style.map("TButton", background=[("active", "#005a8e")])
+        style.configure("TButton", font=("Arial", 16), padding=10, foreground="white", background="#28a745")
+        style.map("TButton", background=[("active", "#218838")])
 
         # Configure the style for combobox
         style.configure("TCombobox", font=("Arial", 18))
-        
+
         # Configure the style for frames
-        style.configure("TFrame", background="#F5F5F5")
+        style.configure("TFrame", background="#f4f4f4")
 
     def create_title_frame(self):
         title_frame = ttk.Frame(self)
         title_frame.pack(pady=20)
-        
+
         # Banner Image
         self.load_banner_image('group_pay_banner.png', title_frame)
 
         # Title Label
-        title_label = ttk.Label(title_frame, text="GroupPay", font=("Helvetica", 36, "bold"), background="#007acc", foreground="white")
-        title_label.pack(pady=20)
+        title_label = ttk.Label(title_frame, text="GroupPay", font=("Arial", 36, "bold"), foreground="#007bff", background="#f4f4f4")
+        title_label.pack(pady=10)
 
     def create_content_frame(self):
         content_frame = ttk.Frame(self)
@@ -66,9 +67,13 @@ class GroupPayApp(tk.Tk):
         discount_entry.grid(row=1, column=1, padx=10, pady=10, sticky=tk.W)
         discount_entry.bind("<KeyRelease>", self.apply_discount)
 
+        # Calculate Button
+        calculate_button = ttk.Button(content_frame, text="Calculate", style="TButton", command=self.calculate_discount)
+        calculate_button.grid(row=2, column=0, columnspan=2, padx=10, pady=20)
+
         # Result Label
-        self.result_label = ttk.Label(content_frame, text="", font=("Arial", 18), background="#F5F5F5")
-        self.result_label.grid(row=2, column=0, columnspan=2, padx=10, pady=20, sticky=tk.W)
+        self.result_label = ttk.Label(content_frame, text="", font=("Arial", 18), background="#f4f4f4")
+        self.result_label.grid(row=3, column=0, columnspan=2, padx=10, pady=20, sticky=tk.W)
 
     def load_banner_image(self, image_path, container):
         try:
@@ -106,6 +111,31 @@ class GroupPayApp(tk.Tk):
                 self.result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR:.2f}")
             except ValueError:
                 self.result_label.config(text="Please enter a valid discount percentage.")
+
+    def calculate_discount(self):
+        # This function is triggered when the "Calculate" button is pressed
+        selected_company = self.company_var.get()
+        discount = self.discount_var.get()
+        if selected_company:
+            vendor_AP, vendor_AR = self.company_details(selected_company, return_values=True)
+            try:
+                discount = float(discount) / 100
+                discounted_AR = vendor_AR * (1 - discount)
+                self.result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR:.2f}")
+            except ValueError:
+                self.result_label.config(text="Please enter a valid discount percentage.")
+
+    def create_contact_footer(self):
+        contact_frame = ttk.Frame(self)
+        contact_frame.pack(side="bottom")
+
+        # Contact Label
+        contact_label = ttk.Label(contact_frame, text="Contact Us:", font=("Arial", 16, "bold"), foreground="#333333", background="#f4f4f4")
+        contact_label.pack(side="left", padx=10, pady=5)
+
+        # Contact Information Label
+        contact_info_label = ttk.Label(contact_frame, text="Email: GroupPay@gmail.com | Phone: (407) 902-5738", font=("Arial", 12), foreground="#333333", background="#f4f4f4")
+        contact_info_label.pack(side="left", padx=10)
 
 if __name__ == "__main__":
     app = GroupPayApp()
