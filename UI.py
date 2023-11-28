@@ -15,6 +15,17 @@ def company_details(company):
     # Display results
     result_label.config(text=f"Selected Company: {company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
 
+def apply_discount():
+    selected_company = company_var.get()
+    if selected_company:
+        vendor_AP, vendor_AR = company_details(selected_company)
+        try:
+            discount = float(discount_var.get()) / 100
+            discounted_AR = vendor_AR * (1 - discount)
+            result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}\nDiscounted AR: {discounted_AR}")
+        except ValueError:
+            result_label.config(text="Please enter a valid discount percentage.")
+
 def on_company_selected(event):
     selected_company = company_var.get()
     company_details(selected_company)
