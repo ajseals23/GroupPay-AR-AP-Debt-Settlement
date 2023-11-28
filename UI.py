@@ -11,11 +11,17 @@ style.configure('TEntry', font=('Helvetica', 10))
 style.configure('TCombobox', font=('Helvetica', 10))
 style.configure('Header.TLabel', font=('Helvetica', 12, 'bold'))
 
-def company_details(company):
+def read_csv_file(file_path, error_message):
     try:
-        df = pd.read_csv('Construction_Contracts.csv')
+        df = pd.read_csv(file_path)
+        return df
     except FileNotFoundError:
-        result_label.config(text="Error: 'Construction_Contracts.csv' file not found.")
+        result_label.config(text=error_message)
+        return None
+
+def company_details(company):
+    df = read_csv_file('Construction_Contracts.csv', "Error: 'Construction_Contracts.csv' file not found.")
+    if df is None:
         return 0, 0
         
     # Calculate Accounts Payable
@@ -29,11 +35,11 @@ def company_details(company):
 def apply_discount():
     # Retrieve the name of the selected company from the dropdown menu
     selected_company = company_var.get()
-        if selected_company:
-            vendor_AP, vendor_AR = company_details(selected_company)
+    if selected_company:
+        vendor_AP, vendor_AR = company_details(selected_company)
         if vendor_AP == 0 and vendor_AR == 0:
-            return  # Exit if there was an error in reading the file
-
+            return
+            
         try:
             discount = float(discount_var.get()) / 100
             if 0 <= discount <= 1:  # Ensure discount is within 0-100%
@@ -49,14 +55,21 @@ def apply_discount():
 def on_company_selected(event):
     selected_company = company_var.get()
     if selected_company:
+        discount_entry.config(state='normal')
         vendor_AP, vendor_AR = company_details(selected_company)
+        if vendor_AP == 0 and vendor_AR == 0:
+            return
         result_label.config(text=f"Selected Company: {selected_company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
-    
+    else:
+        discount_entry.config(state='disabled')
+        
 
 # Load company data
-csv_filepath = 'company_ref.csv'
-df = pd.read_csv(csv_filepath)
-companies_list = df['company_name'].tolist()
+df = read_csv_file('company_ref.csv', "Error: 'company_ref.csv' file not found.")
+if df is not None:
+    companies_list = df['company_name'].tolist()
+else:
+    companies_list = []
 
 # main window
 root = tk.Tk()
