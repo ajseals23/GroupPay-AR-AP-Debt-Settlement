@@ -37,6 +37,15 @@ company_var = tk.StringVar()
 company_combobox = ttk.Combobox(root, textvariable=company_var, values=companies_list, state="readonly")
 company_combobox.pack(padx=10, pady=10)
 
+# Discount entry
+discount_label = ttk.Label(root, text="Enter Discount Percentage:")
+discount_label.pack(padx=10, pady=10)
+
+discount_var = tk.StringVar()
+discount_entry = ttk.Entry(root, textvariable=discount_var)
+discount_entry.pack(padx=10, pady=10)
+discount_entry.bind("<KeyRelease>", lambda _: apply_discount(discount_var.get()))
+
 # display results
 result_label = ttk.Label(root, text="")
 result_label.pack(padx=10, pady=10)
