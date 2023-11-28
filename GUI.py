@@ -1,27 +1,48 @@
+
 import tkinter as tk
 from tkinter import ttk
 import pandas as pd
 
 def company_details(company):
-    print(f"Selected Company: {company}")
+    df = pd.read_csv('Construction_Contracts.csv')
 
-# Load CSV data
+    # Calculate Accounts Payable
+    vendor_AP = df[df['contractor_name'] == company]['revised_amount'].sum()
+
+    # Calculate Accounts Receivable
+    vendor_AR = df[df['vendor_name'] == company]['revised_amount'].sum()
+
+    # Display results
+    result_label.config(text=f"Selected Company: {company}\nTotal AP: {vendor_AP}\nTotal AR: {vendor_AR}")
+
+def on_company_selected(event):
+    selected_company = company_var.get()
+    company_details(selected_company)
+
+# Load company ref
 csv_filepath = 'company_ref.csv'
 df = pd.read_csv(csv_filepath)
 companies_list = df['company_name'].tolist()
 
-# Create main window
+# main window
 root = tk.Tk()
 root.title("Company Selector")
 
-# Create label
+# label
 label = ttk.Label(root, text="Select a Company:")
 label.pack(padx=10, pady=10)
 
-# Create Dropdown for selecting company
+# selecting company
 company_var = tk.StringVar()
 company_combobox = ttk.Combobox(root, textvariable=company_var, values=companies_list, state="readonly")
 company_combobox.pack(padx=10, pady=10)
 
-# Start main loop
+# display results
+result_label = ttk.Label(root, text="")
+result_label.pack(padx=10, pady=10)
+
+# Bind the event handler to the combobox selection event
+company_combobox.bind("<<ComboboxSelected>>", on_company_selected)
+
+# main loop
 root.mainloop()
