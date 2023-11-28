@@ -30,7 +30,7 @@ def apply_discount():
     # Retrieve the name of the selected company from the dropdown menu
     selected_company = company_var.get()
         if selected_company:
-        vendor_AP, vendor_AR = company_details(selected_company)
+            vendor_AP, vendor_AR = company_details(selected_company)
         if vendor_AP == 0 and vendor_AR == 0:
             return  # Exit if there was an error in reading the file
 
