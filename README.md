@@ -1,4 +1,4 @@
-# GroupPay Data Visualization and Invoice Management
+# GroupPay: AR/AP Debt Settlement
 
 ## Overview
 
